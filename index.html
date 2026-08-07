@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>QuickTemp — Weather & Tides</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="QuickTemp: real-time weather, tides, altitude, compass and more. Free on Android.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a1628;
+    --bg2: #0f1e38;
+    --card: #132240;
+    --card2: #1a2f4a;
+    --accent: #1cd4b8;
+    --accent2: #f0a040;
+    --text: #e4eef8;
+    --text-dim: #7a9bbf;
+    --border: rgba(28,212,184,0.15);
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #e8f4fb; --bg2: #d4eaf7; --card: #ffffff; --card2: #f0f8ff;
+      --accent: #0a9e8a; --accent2: #d4780a; --text: #0a1628;
+      --text-dim: #4a6a8a; --border: rgba(10,158,138,0.2);
+    }
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 80px 24px 60px;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    animation: tempCycle 12s ease-in-out infinite;
+    z-index: 0;
+  }
+
+  @keyframes tempCycle {
+    0%   { background: linear-gradient(135deg, #0a1628 0%, #0d3050 100%); }
+    25%  { background: linear-gradient(135deg, #0d1f38 0%, #0a3d48 100%); }
+    50%  { background: linear-gradient(135deg, #1a2810 0%, #2a4a18 100%); }
+    75%  { background: linear-gradient(135deg, #2a1808 0%, #4a2808 100%); }
+    100% { background: linear-gradient(135deg, #0a1628 0%, #0d3050 100%); }
+  }
+
+  .hero-vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.55) 100%);
+    z-index: 1;
+  }
+
+  .hero-content { position: relative; z-index: 2; max-width: 680px; }
+
+  .app-icon {
+    width: 96px; height: 96px; border-radius: 22px;
+    background: linear-gradient(145deg, #0d2040, #1a3a60);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 28px; font-size: 48px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08);
+  }
+
+  .eyebrow {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 16px;
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 7vw, 4.2rem); font-weight: 900;
+    line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 20px;
+  }
+  h1 span { color: var(--accent); }
+
+  .hero-desc {
+    font-size: 1.1rem; color: var(--text-dim);
+    max-width: 480px; margin: 0 auto 36px;
+  }
+
+  .cta-group { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--accent); color: #0a1628; font-weight: 700;
+    font-size: 0.95rem; padding: 14px 28px; border-radius: 50px;
+    text-decoration: none; box-shadow: 0 4px 20px rgba(28,212,184,0.35);
+  }
+
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: transparent; color: var(--text); font-weight: 600;
+    font-size: 0.95rem; padding: 14px 28px; border-radius: 50px;
+    text-decoration: none; border: 1px solid var(--border);
+  }
+
+  .stats {
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 24px;
+  }
+
+  .stats-inner {
+    max-width: 800px; margin: 0 auto;
+    display: flex; justify-content: center; flex-wrap: wrap;
+  }
+
+  .stat {
+    flex: 1; min-width: 140px; text-align: center;
+    padding: 12px 24px; border-right: 1px solid var(--border);
+  }
+  .stat:last-child { border-right: none; }
+
+  .stat-num {
+    font-size: 2rem; font-weight: 900; color: var(--accent);
+    letter-spacing: -0.03em; font-variant-numeric: tabular-nums;
+  }
+
+  .stat-label {
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-dim); margin-top: 4px;
+  }
+
+  section { padding: 80px 24px; }
+
+  .section-inner { max-width: 1000px; margin: 0 auto; }
+
+  .section-header { text-align: center; margin-bottom: 56px; }
+
+  .section-header h2 {
+    font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900;
+    letter-spacing: -0.02em; margin-bottom: 12px;
+  }
+
+  .section-header p { color: var(--text-dim); max-width: 480px; margin: 0 auto; }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+
+  .feature-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px 24px;
+  }
+
+  .feature-icon { font-size: 2rem; margin-bottom: 16px; display: block; }
+  .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+  .feature-card p { font-size: 0.88rem; color: var(--text-dim); line-height: 1.6; }
+
+  .screenshots-section { background: var(--bg2); }
+
+  .screenshots-scroll {
+    display: flex; gap: 20px; overflow-x: auto;
+    padding: 8px 4px 16px;
+    scrollbar-width: thin; scrollbar-color: var(--accent) transparent;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .phone-frame {
+    flex-shrink: 0; width: 200px; height: 360px;
+    border-radius: 28px; border: 2px solid var(--border);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 16px 12px; text-align: center; position: relative;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+
+  .phone-label {
+    position: absolute; top: 12px; left: 0; right: 0;
+    font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--accent); text-align: center;
+  }
+
+  .phone-big { font-size: 2.8rem; font-weight: 900; color: #fff; line-height: 1; margin-bottom: 6px; }
+  .phone-sub { font-size: 0.72rem; color: rgba(255,255,255,0.65); line-height: 1.4; }
+  .phone-emoji { font-size: 3rem; margin-bottom: 10px; }
+
+  .phone-blue   { background: linear-gradient(160deg, #1e3a5f, #3a6ea5); }
+  .phone-green  { background: linear-gradient(160deg, #1e5c3a, #2e8a5a); }
+  .phone-orange { background: linear-gradient(160deg, #7a4a10, #c07020); }
+  .phone-dark   { background: linear-gradient(160deg, #0d1b2a, #1a2f4a); }
+
+  .how-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 32px; counter-reset: steps;
+  }
+
+  .how-step { text-align: center; counter-increment: steps; }
+
+  .how-step::before {
+    content: counter(steps);
+    display: inline-flex; width: 44px; height: 44px;
+    background: var(--accent); color: #0a1628;
+    font-weight: 900; font-size: 1.1rem;
+    border-radius: 50%; align-items: center; justify-content: center;
+    margin-bottom: 16px;
+  }
+
+  .how-step h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+  .how-step p { font-size: 0.85rem; color: var(--text-dim); }
+
+  .free-section {
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .free-inner { max-width: 640px; margin: 0 auto; text-align: center; }
+
+  .free-inner h2 {
+    font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900;
+    letter-spacing: -0.02em; margin-bottom: 12px;
+  }
+
+  .free-inner p { color: var(--text-dim); margin-bottom: 32px; }
+
+  .play-badge {
+    display: inline-flex; align-items: center; gap: 12px;
+    background: #000; color: #fff; padding: 12px 22px;
+    border-radius: 10px; text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .play-badge-icon { font-size: 1.6rem; }
+  .play-badge-small { display: block; font-size: 0.65rem; opacity: 0.7; letter-spacing: 0.05em; text-transform: uppercase; }
+  .play-badge-big { display: block; font-size: 1rem; font-weight: 700; }
+
+  footer {
+    padding: 40px 24px; text-align: center;
+    color: var(--text-dim); font-size: 0.82rem;
+    border-top: 1px solid var(--border);
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 600px) {
+    .stat { min-width: 100px; padding: 10px 14px; }
+    .stat-num { font-size: 1.5rem; }
+    section { padding: 56px 16px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-bg { animation: none; background: linear-gradient(135deg, #0a1628, #0d3050); }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-vignette"></div>
+  <div class="hero-content">
+    <div class="app-icon">🌡️</div>
+    <p class="eyebrow">Free Android App</p>
+    <h1>Weather that <span>knows where you are</span></h1>
+    <p class="hero-desc">Real-time temperature, tides, altitude, compass, air quality and more — all in one screen, tuned to your exact location.</p>
+    <div class="cta-group">
+      <a href="https://play.google.com/store/apps/details?id=com.diegohg.quicktemp" class="btn-primary" target="_blank" rel="noopener">
+        ▶ Get it on Google Play
+      </a>
+      <a href="#features" class="btn-secondary">See features ↓</a>
+    </div>
+  </div>
+</header>
+
+<div class="stats">
+  <div class="stats-inner">
+    <div class="stat"><div class="stat-num">19</div><div class="stat-label">Languages</div></div>
+    <div class="stat"><div class="stat-num">Free</div><div class="stat-label">Always</div></div>
+    <div class="stat"><div class="stat-num">10+</div><div class="stat-label">Features</div></div>
+    <div class="stat"><div class="stat-num">PWA</div><div class="stat-label">Works in browser too</div></div>
+  </div>
+</div>
+
+<section id="features">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>Everything you need, nothing you don't</h2>
+      <p>QuickTemp puts all the essentials on one screen — no tapping through menus.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card"><span class="feature-icon">🌡️</span><h3>Live Temperature</h3><p>Current temperature with feels-like, humidity, wind speed and weather description — updated automatically.</p></div>
+      <div class="feature-card"><span class="feature-icon">🧭</span><h3>Accurate Compass</h3><p>Real magnetic compass using your device sensor. Always points north — works offline.</p></div>
+      <div class="feature-card"><span class="feature-icon">⛰️</span><h3>Altitude & Location</h3><p>Precise GPS altitude updated every 10 seconds. Tap to open an interactive map of your position.</p></div>
+      <div class="feature-card"><span class="feature-icon">🌊</span><h3>Tide Schedule</h3><p>Daily high and low tide times with a visual chart. Essential for coastal activities.</p></div>
+      <div class="feature-card"><span class="feature-icon">🌙</span><h3>Sun & Night Hours</h3><p>Countdown to sunrise or sunset based on your actual location. Day/night detected automatically.</p></div>
+      <div class="feature-card"><span class="feature-icon">💨</span><h3>Air Quality & UV</h3><p>European AQI index and UV radiation level so you know when to take precautions outdoors.</p></div>
+      <div class="feature-card"><span class="feature-icon">🌧️</span><h3>Rain Radar</h3><p>Live precipitation radar so you can see rain approaching before it arrives.</p></div>
+      <div class="feature-card"><span class="feature-icon">📅</span><h3>Hourly Forecast</h3><p>Hour-by-hour precipitation and wind forecast with a clean visual chart.</p></div>
+      <div class="feature-card"><span class="feature-icon">⭐</span><h3>Favourite Cities</h3><p>Save multiple locations and switch between them instantly. Check weather anywhere in the world.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="screenshots-section">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>Designed for the real world</h2>
+      <p>The background changes color with the temperature — cold blues, warm greens, hot ambers.</p>
+    </div>
+    <div class="screenshots-scroll">
+      <div class="phone-frame phone-blue"><span class="phone-label">Main Screen</span><div class="phone-emoji">☀️</div><div class="phone-big">20°</div><div class="phone-sub">Los Angeles<br>3h 37m sun left<br>UV 0 · AQI 38</div></div>
+      <div class="phone-frame phone-dark"><span class="phone-label">Altitude & Map</span><div class="phone-emoji">📍</div><div class="phone-big">28m</div><div class="phone-sub">Precise Location<br>Interactive map<br>with zoom controls</div></div>
+      <div class="phone-frame phone-dark"><span class="phone-label">Compass</span><div class="phone-emoji">🧭</div><div class="phone-big">89°</div><div class="phone-sub">Accurate heading<br>Always points North<br>Works offline</div></div>
+      <div class="phone-frame phone-blue"><span class="phone-label">Night Mode</span><div class="phone-emoji">🌙</div><div class="phone-big">1h 34m</div><div class="phone-sub">Night remaining<br>Countdown to<br>next sunrise</div></div>
+      <div class="phone-frame phone-orange"><span class="phone-label">Hot Weather</span><div class="phone-emoji">🔥</div><div class="phone-big">31°</div><div class="phone-sub">El Cairo<br>8h 24m sun left<br>UV 9 · AQI 42</div></div>
+      <div class="phone-frame phone-dark"><span class="phone-label">Tide Chart</span><div class="phone-emoji">🌊</div><div class="phone-big">↕</div><div class="phone-sub">Daily tide schedule<br>High & low times<br>Visual chart</div></div>
+      <div class="phone-frame phone-orange"><span class="phone-label">Env. Metrics</span><div class="phone-emoji">📊</div><div class="phone-big">UV 6</div><div class="phone-sub">Air Quality · Sun<br>8h 22m remaining<br>AQI Moderate</div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>Up and running in seconds</h2>
+      <p>No account. No setup. Just install and open.</p>
+    </div>
+    <div class="how-grid">
+      <div class="how-step"><h3>Install</h3><p>Download free from Google Play. No sign-up required.</p></div>
+      <div class="how-step"><h3>Allow Location</h3><p>Grant location access once. QuickTemp does the rest.</p></div>
+      <div class="how-step"><h3>See Everything</h3><p>All your local conditions appear instantly on one screen.</p></div>
+      <div class="how-step"><h3>Add Favourites</h3><p>Save cities to check weather anywhere in the world.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="free-section">
+  <div class="section-inner">
+    <div class="free-inner">
+      <h2>Free. No account. Always.</h2>
+      <p>QuickTemp is free to download and use. Available now on Android.</p>
+      <a href="https://play.google.com/store/apps/details?id=com.diegohg.quicktemp" class="play-badge" target="_blank" rel="noopener">
+        <span class="play-badge-icon">▶</span>
+        <span class="play-badge-text">
+          <span class="play-badge-small">Get it on</span>
+          <span class="play-badge-big">Google Play</span>
+        </span>
+      </a>
+      <br><br>
+      <p style="font-size:0.85rem">Also available as a <a href="https://diegohgc.github.io/temperatura/" style="color:var(--accent)">web app</a> — no install needed.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>
+    © 2026 DHaudiovisuales ·
+    <a href="https://diegohgc.github.io/temperatura/privacy.html">Privacy Policy</a> ·
+    <a href="https://play.google.com/store/apps/details?id=com.diegohg.quicktemp">Google Play</a> ·
+    <a href="https://diegohgc.github.io/temperatura/">Web App</a>
+  </p>
+</footer>
+
+</body>
+</html>
